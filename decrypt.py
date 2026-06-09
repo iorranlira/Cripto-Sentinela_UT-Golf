@@ -1,5 +1,3 @@
-# decrypt.py
-
 import base64
 import hashlib
 import logging

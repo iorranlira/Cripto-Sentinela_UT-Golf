@@ -1,5 +1,3 @@
-# main.py
-
 import logging
 import json
 import paho.mqtt.client as mqtt
