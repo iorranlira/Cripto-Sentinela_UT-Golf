@@ -1,0 +1,10 @@
+# Chaves locais — NUNCA subir no git
+minhas_chaves.json
+chaves_confiadas.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
