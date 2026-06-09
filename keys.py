@@ -1,20 +1,11 @@
+import os
+import json
+import base64
 from cryptography.hazmat.primitives.asymmetric import rsa, ec
 from cryptography.hazmat.primitives import serialization
-import base64
-import json
 
-#RSA KEYS
-rsa_private_key = rsa.generate_private_key(
-    public_exponent=65537,
-    key_size=2048
-)
-rsa_public_key = rsa_private_key.public_key()
+ARQUIVO_CHAVES_LOCAIS = "minhas_chaves.json"
 
-#ECDSA KEYS
-ecdsa_private_key = ec.generate_private_key(ec.SECP256R1())
-ecdsa_public_key = ecdsa_private_key.public_key()
-
-# Condificando keys em Base64
 def export_keys_as_string(private_key, public_key):
     _priv_bytes = private_key.private_bytes(
         encoding=serialization.Encoding.DER,
@@ -36,16 +27,32 @@ def load_rsa_pub_key(b64_str):
 def load_ecdsa_pub_key(b64_str):
     return serialization.load_der_public_key(base64.b64decode(b64_str))
 
-chaves_rsa   = export_keys_as_string(rsa_private_key, rsa_public_key)
-chaves_ecdsa = export_keys_as_string(ecdsa_private_key, ecdsa_public_key)
+def load_rsa_priv_key(b64_str):
+    return serialization.load_der_private_key(base64.b64decode(b64_str), password=None)
 
-ID_UNIDADE = "ut-golf"
+def load_ecdsa_priv_key(b64_str):
+    return serialization.load_der_private_key(base64.b64decode(b64_str), password=None)
 
-identidade = {
-    "id_unidade": ID_UNIDADE,
-   "chave_publica_rsa":   chaves_rsa["public_key"],
-    "chave_publica_ecdsa": chaves_ecdsa["public_key"]
-}
+def gerar_e_salvar_chaves():
+    rsa_priv   = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    ecdsa_priv = ec.generate_private_key(ec.SECP256R1())
 
-print(json.dumps(identidade, indent=2))
-print(f"RSA  privada : {chaves_rsa['private_key'][:40]}...")
+    chaves = {
+        "rsa":   export_keys_as_string(rsa_priv, rsa_priv.public_key()),
+        "ecdsa": export_keys_as_string(ecdsa_priv, ecdsa_priv.public_key())
+    }
+
+    with open(ARQUIVO_CHAVES_LOCAIS, "w") as f:
+        json.dump(chaves, f, indent=2)
+
+    return chaves
+
+def carregar_ou_gerar_chaves():
+    if os.path.exists(ARQUIVO_CHAVES_LOCAIS):
+        with open(ARQUIVO_CHAVES_LOCAIS, "r") as f:
+            chaves = json.load(f)
+        print("✅ Chaves carregadas do arquivo")
+    else:
+        chaves = gerar_e_salvar_chaves()
+        print("✅ Chaves geradas e salvas em", ARQUIVO_CHAVES_LOCAIS)
+    return chaves
