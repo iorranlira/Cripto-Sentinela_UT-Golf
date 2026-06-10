@@ -1,9 +1,8 @@
 import json
 import time
 import paho.mqtt.client as mqtt
-from config import BROKER, PORT
+from config import BROKER, PORT, TOPICO_NOTAS
 
-TOPICO_NOTAS = "sisdef/broadcast/notas"
 
 def on_connect(client, userdata, flags, reason_code, properties):
     if reason_code == 0:
@@ -15,13 +14,14 @@ def on_connect(client, userdata, flags, reason_code, properties):
     else:
         print(f"[-] Connection failed. Code: {reason_code}")
 
+
 def on_message(client, userdata, msg):
-    print(f"\n📊 [UPDATED SCOREBOARD RECEIVED]")
     try:
         dados = json.loads(msg.payload.decode('utf-8'))
         print(json.dumps(dados, indent=2))
     except Exception as e:
         print(f"[-] Error processing data: {e}")
+
 
 def main():
     cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -29,13 +29,18 @@ def main():
     cliente.on_message = on_message
 
     cliente.connect(BROKER, PORT)
-    
-    print("[*] Starting live scoreboard view. Press CTRL+C to exit.")
+
+    print(f"[*] Waiting 15 seconds for grades in {TOPICO_NOTAS}...")
     try:
-        cliente.loop_forever()
+        cliente.loop_start()
+        time.sleep(15)
+        cliente.loop_stop()
     except KeyboardInterrupt:
-        print("\n[*] Closing grades check.")
+        print("\n[*] Interrupted by user.")
+    finally:
+        print("[*] Closing grades check.")
         cliente.disconnect()
+
 
 if __name__ == "__main__":
     main()
